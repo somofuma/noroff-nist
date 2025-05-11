@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Directory Buster - Security Tools Suite{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-folder-open"></i> Directory Buster</h2>
+        <p class="lead">Discover hidden directories and files on web servers.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Scan Website</h5>
+                <form id="bustForm">
+                    <div class="mb-3">
+                        <label for="url" class="form-label">Target URL</label>
+                        <input type="url" class="form-control" id="url" name="url" required
+                               placeholder="Enter target URL (e.g., http://example.com)">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="wordlist" class="form-label">Wordlist Path</label>
+                        <input type="text" class="form-control" id="wordlist" name="wordlist" required
+                               placeholder="Enter path to wordlist file">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-search"></i> Start Scan
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Tips</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-info-circle text-info"></i> Use a comprehensive wordlist for better results.</li>
+                    <li><i class="fas fa-info-circle text-info"></i> Include common file extensions (.php, .html, etc.).</li>
+                    <li><i class="fas fa-exclamation-triangle text-warning"></i> Scanning may take some time depending on the wordlist size.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Results</h5>
+                <div id="results">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Scan results will appear here.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('#bustForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        $('#results').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i> Scanning in progress...
+            </div>
+        `);
+        
+        $.ajax({
+            url: '/directory-buster',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    let resultsHtml = '<div class="table-responsive"><table class="table table-striped">';
+                    resultsHtml += '<thead><tr><th>URL</th><th>Status</th><th>Size</th></tr></thead><tbody>';
+                    
+                    for (const [url, info] of Object.entries(response.results)) {
+                        const statusClass = info.status_code === 200 ? 'success' : 
+                                          info.status_code === 403 ? 'warning' : 'primary';
+                        
+                        resultsHtml += `
+                            <tr>
+                                <td>
+                                    <a href="${url}" target="_blank">
+                                        ${url.split('/').pop()}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-${statusClass}">
+                                        ${info.status_code}
+                                    </span>
+                                </td>
+                                <td>${info.content_length} bytes</td>
+                            </tr>
+                        `;
+                    }
+                    
+                    resultsHtml += '</tbody></table></div>';
+                    
+                    if (Object.keys(response.results).length === 0) {
+                        resultsHtml = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                                No directories or files found.
+                            </div>
+                        `;
+                    }
+                    
+                    $('#results').html(resultsHtml);
+                } else {
+                    $('#results').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Error:</strong> ${response.error}
+                        </div>
+                    `);
+                }
+            },
+            error: function() {
+                $('#results').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Error:</strong> Failed to communicate with the server.
+                    </div>
+                `);
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

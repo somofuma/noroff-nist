@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Hashes - Security Tools Suite{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-hashtag"></i> Generate Hashes</h2>
+        <p class="lead">Generate MD5 hashes from a wordlist.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Upload Wordlist</h5>
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="wordlist" class="form-label">Wordlist</label>
+                        <input type="file" class="form-control" id="wordlist" name="wordlist" accept=".txt" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="save_path" class="form-label">Save Path</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="save_path" name="save_path" placeholder="Enter the path to save the hashes">
+                            <button type="button" class="btn btn-outline-secondary" id="select_directory">Select Directory</button>
+                        </div>
+                    </div>
+                    <input type="file" id="directory_selector" style="display: none;" webkitdirectory directory>
+                    <button type="submit" class="btn btn-primary">Generate Hashes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Results</h5>
+                <div id="results">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Results will appear here.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        $('#results').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i> Generating hashes...
+            </div>
+        `);
+        
+        $.ajax({
+            url: '/generate-hashes',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    $('#results').html(`
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Success:</strong> ${response.message}
+                        </div>
+                    `);
+                } else {
+                    $('#results').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Error:</strong> ${response.error}
+                        </div>
+                    `);
+                }
+            },
+            error: function() {
+                $('#results').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Error:</strong> Failed to communicate with the server.
+                    </div>
+                `);
+            }
+        });
+    });
+
+    $('#select_directory').on('click', function() {
+        $('#directory_selector').click();
+    });
+
+    $('#directory_selector').on('change', function() {
+        const path = $(this).val();
+        const directory = path.substring(0, path.lastIndexOf('\\'));
+        $('#save_path').val(directory);
+    });
+});
+</script>
+{% endblock %} 

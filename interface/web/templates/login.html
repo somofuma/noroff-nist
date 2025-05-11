@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Login</title>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Login Form</h2>
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="username">Username:</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password:</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div id="results"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            $('#results').html(`
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> Testing in progress...
+                </div>
+            `);
+            
+            $.ajax({
+                url: '/login-cracker',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        let resultsHtml = '<div class="table-responsive"><table class="table table-striped">';
+                        resultsHtml += '<thead><tr><th>Username</th><th>Password</th><th>Status</th></tr></thead><tbody>';
+                        
+                        for (const [creds, info] of Object.entries(response.results)) {
+                            const [username, password] = creds.split(':');
+                            resultsHtml += `
+                                <tr class="table-success">
+                                    <td>${username}</td>
+                                    <td>${password}</td>
+                                    <td>
+                                        <span class="badge bg-success">Success</span>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                        
+                        resultsHtml += '</tbody></table></div>';
+                        
+                        if (Object.keys(response.results).length === 0) {
+                            resultsHtml = `
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    No valid credentials found.
+                                </div>
+                            `;
+                        }
+                        
+                        $('#results').html(resultsHtml);
+                    } else {
+                        $('#results').html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <strong>Error:</strong> ${response.error}
+                            </div>
+                        `);
+                    }
+                },
+                error: function() {
+                    $('#results').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Error:</strong> Failed to communicate with the server.
+                        </div>
+                    `);
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Security Tools Suite - Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-4">Security Tools Suite</h1>
+        <p class="lead">A collection of security testing tools for educational purposes.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card h-100 tool-card">
+            <div class="card-body text-center">
+                <i class="fas fa-key fa-3x mb-3 text-primary"></i>
+                <h5 class="card-title">Password Cracker</h5>
+                <p class="card-text">Crack password hashes using dictionary attacks.</p>
+                <a href="/password-cracker" class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Launch Tool
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card h-100 tool-card">
+            <div class="card-body text-center">
+                <i class="fas fa-network-wired fa-3x mb-3 text-success"></i>
+                <h5 class="card-title">Network Mapper</h5>
+                <p class="card-text">Scan networks for open ports and services.</p>
+                <a href="/network-mapper" class="btn btn-success">
+                    <i class="fas fa-arrow-right"></i> Launch Tool
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card h-100 tool-card">
+            <div class="card-body text-center">
+                <i class="fas fa-folder-open fa-3x mb-3 text-warning"></i>
+                <h5 class="card-title">Directory Buster</h5>
+                <p class="card-text">Discover hidden directories and files on web servers.</p>
+                <a href="/directory-buster" class="btn btn-warning">
+                    <i class="fas fa-arrow-right"></i> Launch Tool
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card h-100 tool-card">
+            <div class="card-body text-center">
+                <i class="fas fa-user-secret fa-3x mb-3 text-danger"></i>
+                <h5 class="card-title">Login Cracker</h5>
+                <p class="card-text">Test web login forms for weak credentials.</p>
+                <a href="/login-cracker" class="btn btn-danger">
+                    <i class="fas fa-arrow-right"></i> Launch Tool
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Disclaimer:</strong> This suite is for educational purposes only. Always obtain proper authorization before testing any systems or networks.
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Network Mapper - Security Tools Suite{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-network-wired"></i> Network Mapper</h2>
+        <p class="lead">Scan networks for open ports and services.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Scan Network</h5>
+                <form id="scanForm">
+                    <div class="mb-3">
+                        <label for="target" class="form-label">Target IP</label>
+                        <input type="text" class="form-control" id="target" name="target" required
+                               placeholder="Enter target IP address">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_port" class="form-label">Start Port</label>
+                                <input type="number" class="form-control" id="start_port" name="start_port"
+                                       value="1" min="1" max="65535">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="end_port" class="form-label">End Port</label>
+                                <input type="number" class="form-control" id="end_port" name="end_port"
+                                       value="1024" min="1" max="65535">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-search"></i> Start Scan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Results</h5>
+                <div id="results">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Scan results will appear here.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('#scanForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        $('#results').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i> Scanning in progress...
+            </div>
+        `);
+        
+        $.ajax({
+            url: '/network-mapper',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    let resultsHtml = '<div class="table-responsive"><table class="table table-striped">';
+                    resultsHtml += '<thead><tr><th>Port</th><th>Status</th><th>Service</th></tr></thead><tbody>';
+                    
+                    for (const [port, info] of Object.entries(response.results)) {
+                        resultsHtml += `
+                            <tr>
+                                <td>${port}</td>
+                                <td><span class="badge bg-success">Open</span></td>
+                                <td>${info.service}</td>
+                            </tr>
+                        `;
+                    }
+                    
+                    resultsHtml += '</tbody></table></div>';
+                    
+                    if (Object.keys(response.results).length === 0) {
+                        resultsHtml = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                                No open ports found in the specified range.
+                            </div>
+                        `;
+                    }
+                    
+                    $('#results').html(resultsHtml);
+                } else {
+                    $('#results').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Error:</strong> ${response.error}
+                        </div>
+                    `);
+                }
+            },
+            error: function() {
+                $('#results').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Error:</strong> Failed to communicate with the server.
+                    </div>
+                `);
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

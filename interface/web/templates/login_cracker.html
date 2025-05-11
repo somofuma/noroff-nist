@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Login Cracker - Security Tools Suite{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-user-secret"></i> Login Cracker</h2>
+        <p class="lead">Test web login forms for weak credentials.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Test Login Form</h5>
+                <form id="loginForm" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="url" class="form-label">Target URL</label>
+                        <input type="text" class="form-control" id="url" name="url" required placeholder="Enter the login form URL">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="userlist" class="form-label">Userlist</label>
+                        <input type="file" class="form-control" id="userlist" name="userlist" accept=".txt" required>
+                    </div>
+                    
+                    <div class="mb-3
+                    ">
+                        <label for="passlist" class="form-label">Passlist</label>
+                        <input type="file" class="form-control" id="passlist" name="passlist" accept=".txt" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username_field" class="form-label">Username Field Name</label>
+                        <input type="text" class="form-control" id="username_field" name="username_field" required placeholder="Enter the username field name">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password_field" class="form-label">Password Field Name</label>
+                        <input type="text" class="form-control" id="password_field" name="password_field" required placeholder="Enter the password field name">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="success_indicator" class="form-label">Success Indicator</label>
+                        <input type="text" class="form-control" id="success_indicator" name="success_indicator" required placeholder="Enter the success indicator">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="failure_indicator" class="form-label">Failure Indicator</label>
+                        <input type="text" class="form-control" id="failure_indicator" name="failure_indicator" required placeholder="Enter the failure indicator">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Cracking
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Results</h5>
+                <div id="results">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Test results will appear here.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Important Notes</h5>
+                <ul class="list-unstyled">
+                    <li>
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        Ensure you have permission to test the target system.
+                    </li>
+                    <li>
+                        <i class="fas fa-info-circle text-info"></i>
+                        Use small wordlists for initial testing.
+                    </li>
+                    <li>
+                        <i class="fas fa-shield-alt text-success"></i>
+                        Consider rate limiting to avoid account lockouts.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        $('#results').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i> Testing in progress...
+            </div>
+        `);
+        
+        $.ajax({
+            url: '/login-cracker',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    let resultsHtml = '<div class="table-responsive"><table class="table table-striped">';
+                    resultsHtml += '<thead><tr><th>Username</th><th>Password</th><th>Status</th></tr></thead><tbody>';
+                    
+                    for (const [creds, info] of Object.entries(response.results)) {
+                        const [username, password] = creds.split(':');
+                        resultsHtml += `
+                            <tr class="table-success">
+                                <td>${username}</td>
+                                <td>${password}</td>
+                                <td>
+                                    <span class="badge bg-success">Success</span>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    
+                    resultsHtml += '</tbody></table></div>';
+                    
+                    if (Object.keys(response.results).length === 0) {
+                        resultsHtml = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                                No valid credentials found.
+                            </div>
+                        `;
+                    }
+                    
+                    $('#results').html(resultsHtml);
+                } else {
+                    $('#results').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Error:</strong> ${response.error}
+                        </div>
+                    `);
+                }
+            },
+            error: function() {
+                $('#results').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Error:</strong> Failed to communicate with the server.
+                    </div>
+                `);
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
